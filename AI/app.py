@@ -4,6 +4,10 @@ import threading
 import logging
 import json
 
+from concurrent.futures import ThreadPoolExecutor
+
+executor = ThreadPoolExecutor(max_workers=4)  # adjust based on CPU/RAM
+
 # Configure logging for production debugging
 logging.basicConfig(
     level=logging.INFO,

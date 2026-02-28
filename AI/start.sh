@@ -7,7 +7,8 @@ curl http://localhost:11434 || { echo "Ollama server failed"; exit 1; }
 
 echo "Pulling smaller model..."
 ollama pull qwen2.5:0.5b
-gunicorn -w 1 -b 0.0.0.0:$PORT wsgi:app --timeout 300
+# gunicorn -w 1 -b 0.0.0.0:$PORT wsgi:app --timeout 300
+gunicorn -w 4 --threads 2 -b 0.0.0.0:$PORT wsgi:app --timeout 300
 # gunicorn -w 2 --threads 2 -b 0.0.0.0:$PORT wsgi:app --timeout 300
 
 
