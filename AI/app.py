@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 # --- CONFIGURATION ---
 MODEL = 'qwen2.5:1.5b'
-MAX_HISTORY = 6  # Kept low for RPi RAM constraints
+MAX_HISTORY = 6
 PORT = 5000
 
 # Global lock to prevent concurrent Ollama requests from crashing the device
@@ -72,39 +72,60 @@ def chat():
             # Keep system prompt (index 0) and remove oldest conversation pairs
             user_histories[user_id].pop(1)
 
+        # def generate():
+        #     # THREAD LOCK: Ensures only one user interacts with Ollama at a time
+        #     with ollama_lock:
+        #         try:
+        #             logger.info(f"Ollama stream started for {user_id}")
+        #             stream = ollama.chat(
+        #                 model=MODEL, 
+        #                 messages=user_histories[user_id], 
+        #                 stream=True
+        #             )
+                    
+        #             full_response = ""
+        #             for chunk in stream:
+        #                 content = chunk['message']['content']
+        #                 full_response += content
+        #                 # Yield raw text immediately for true streaming
+        #                 yield content
+                    
+        #             # Save final assistant response to history
+        #             user_histories[user_id].append({'role': 'assistant', 'content': full_response})
+        #             logger.info(f"Stream finished for {user_id}. Context len: {len(user_histories[user_id])}")
+                    
+        #         except Exception as e:
+        #             logger.error(f"Ollama generation error: {e}")
+        #             yield f" [Error: {str(e)}]"
+
         def generate():
-            # THREAD LOCK: Ensures only one user interacts with Ollama at a time
-            # This prevents Raspberry Pi 5 from running out of memory (OOM)
             with ollama_lock:
+                full_response = ""
                 try:
                     logger.info(f"Ollama stream started for {user_id}")
-                    stream = ollama.chat(
-                        model=MODEL, 
-                        messages=user_histories[user_id], 
-                        stream=True
-                    )
-                    
-                    full_response = ""
+                    stream = ollama.chat(model=MODEL, messages=user_histories[user_id], stream=True)
+
                     for chunk in stream:
-                        content = chunk['message']['content']
+                        content = chunk.get('message', {}).get('content', '')
+                        if not content:
+                            continue
+
                         full_response += content
-                        # Yield raw text immediately for true streaming
-                        yield content
-                    
-                    # Save final assistant response to history
+                        # Convert string to bytes for Gunicorn
+                        yield content.encode('utf-8')
+
                     user_histories[user_id].append({'role': 'assistant', 'content': full_response})
                     logger.info(f"Stream finished for {user_id}. Context len: {len(user_histories[user_id])}")
-                    
+
                 except Exception as e:
                     logger.error(f"Ollama generation error: {e}")
-                    yield f" [Error: {str(e)}]"
+                    yield f"[Error: {str(e)}]".encode('utf-8')
 
-        # Use text/plain for raw streaming text
-        return Response(generate(), mimetype='text/plain')
-
+                    
+        return Response(generate(), mimetype='text/plain; charset=utf-8')
     except Exception as e:
-        logger.error(f"Chat route error: {e}")
-        return jsonify({'error': 'An internal error occurred.'}), 500
+        logger.error(f"Chat endpoint error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == "__main__":
     # In production, this file should be run via gunicorn, not app.run()
