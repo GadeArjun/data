@@ -128,5 +128,7 @@ def chat():
         return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == "__main__":
+    # run code here
+    
     # In production, this file should be run via gunicorn, not app.run()
     app.run(host='0.0.0.0', port=PORT, debug=False)
