@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NxtAi | Ultra - Neural Processing Engine</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+        :root {
+            --bg-main: #0f172a;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.25);
+            --panel-bg: rgba(15, 23, 42, 0.8);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-main);
+            background-image:
+                radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 35%),
+                radial-gradient(circle at 100% 100%, rgba(79, 70, 229, 0.1) 0%, transparent 35%),
+                radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%);
+            color: #f8fafc;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Glassmorphism Evolution */
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Message Styling */
+        .user-msg {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.4);
+            animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .ai-msg {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        /* Code Block Enhancement */
+        .prose pre {
+            background: #020617 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border-radius: 0 0 12px 12px !important;
+        }
+
+        .prose code {
+            font-family: 'Fira Code', monospace !important;
+            font-size: 0.85rem !important;
+            background: transparent !important;
+            padding: 0 !important;
+        }
+
+        /* Status Indicator Pulse */
+        .status-pulse {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .status-pulse::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+
+        /* Scrollbar */
+        #chatbox::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #chatbox::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #chatbox::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .typing-dot {
+            width: 5px;
+            height: 5px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: dotBounce 1.4s infinite ease-in-out both;
+        }
+
+        @keyframes dotBounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
+        }
+
+        /* Neural Analyzing Animation */
+        @keyframes analyze-pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.4;
+                filter: blur(0px);
+            }
+
+            50% {
+                transform: scale(1.5);
+                opacity: 1;
+                filter: blur(1px) drop-shadow(0 0 8px #6366f1);
+            }
+        }
+
+        @keyframes shimmer-text {
+            0% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.5;
+            }
+        }
+
+        .animate-analyze {
+            animation: analyze-pulse 1.4s infinite ease-in-out;
+        }
+
+        .animate-shimmer {
+            animation: shimmer-text 2s infinite ease-in-out;
+        }
+
+        .analyze-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #818cf8;
+            /* indigo-400 */
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* SVG Preview Artboard */
+        .svg-preview-container {
+            background-image:
+                linear-gradient(rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-color: rgba(15, 23, 42, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 250px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .svg-preview-container svg {
+            max-width: 80%;
+            max-height: 200px;
+            filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.3));
+        }
+    </style>
+</head>
+
+<body class="p-0 sm:p-4">
+
+    <div
+        class="chat-container relative w-full max-w-6xl h-full sm:h-[90vh] glass-panel sm:rounded-[2.5rem] flex flex-col overflow-hidden">
+
+        <header class="px-8 py-2 border-b border-white/5 flex items-center justify-between bg-white/5">
+            <div class="flex items-center gap-5">
+                <div class="relative group">
+                    <div
+                        class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:rotate-12 transition-transform duration-300">
+                        <i class="mdi mdi-brain text-3xl text-white"></i>
+                    </div>
+                    <div class="absolute -bottom-1 -right-1 bg-slate-900 p-1 rounded-full border border-white/10">
+                        <div class="status-pulse"></div>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                        NxtAi <span
+                            class="bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-lg text-xs border border-indigo-500/30">ULTRA
+                            V2</span>
+                    </h1>
+                    <div class="flex items-center gap-3 mt-1">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Neural Processing
+                            Active</span>
+                        <span class="w-1 h-1 bg-slate-600 rounded-full"></span>
+                        <span class="text-[10px] text-indigo-400 font-bold uppercase">Latency: <span
+                                id="latency">24ms</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hidden md:flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-[10px] text-slate-500 font-bold uppercase">Model</p>
+                    <p class="text-xs text-slate-300 font-mono">qwen2.5:0.5b</p>
+                </div>
+                <div class="h-8 w-[1px] bg-white/10"></div>
+                <button
+                    class="h-10 w-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all">
+                    <i class="mdi mdi-cog-outline text-xl"></i>
+                </button>
+            </div>
+        </header>
+
+        <main id="chatbox" class="flex-grow overflow-y-auto px-6 py-10 space-y-8">
+            <div id="welcome-screen" class="h-full flex flex-col items-center justify-center text-center">
+                <div class="relative my-2">
+                    <div class="absolute inset-0 bg-indigo-500 blur-3xl opacity-20"></div>
+                    <div
+                        class="relative w-24 h-24 bg-indigo-600/10 rounded-3xl flex items-center justify-center border border-indigo-500/20">
+                        <i class="mdi mdi-shimmer text-5xl text-indigo-400"></i>
+                    </div>
+                </div>
+                <h2 class="text-3xl font-bold text-white mb-3">Core Initialized</h2>
+                <p class="text-slate-400 max-w-md text-sm leading-relaxed mx-auto">
+                    The ultra-fast neural engine is standing by. Provide architectural requirements, complex code logic,
+                    or technical queries.
+                </p>
+                <div class="grid grid-cols-2 gap-3 mt-10 max-w-lg w-full">
+                    <div onclick="handleExampleClick('Write a React hook for debounced API calls')"
+                        class="p-4 bg-white/5 border border-white/5 rounded-2xl text-left hover:bg-white/10 cursor-pointer transition-all border-l-4 border-l-indigo-500">
+                        <p class="text-indigo-400 text-[10px] font-bold uppercase mb-1">Development</p>
+                        <p class="text-slate-300 text-xs">Write a React hook for debounced API calls.</p>
+                    </div>
+                    <div onclick="handleExampleClick('Explain Redis Pub/Sub vs Kafka queues.')"
+                        class="p-4 bg-white/5 border border-white/5 rounded-2xl text-left hover:bg-white/10 cursor-pointer transition-all border-l-4 border-l-purple-500">
+                        <p class="text-purple-400 text-[10px] font-bold uppercase mb-1">Architecture</p>
+                        <p class="text-slate-300 text-xs">Explain Redis Pub/Sub vs Kafka queues.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="p-8 bg-gradient-to-t from-slate-950/80 to-transparent">
+            <div class="max-w-4xl mx-auto">
+                <div
+                    class="relative glass-panel rounded-[2rem] p-2 flex items-end gap-2 ring-1 ring-white/10 focus-within:ring-indigo-500/40 transition-all duration-500 shadow-2xl">
+                    <textarea id="user_input" rows="1" placeholder="Inquire with NxtAi Ultra..."
+                        class="w-full bg-transparent border-none focus:ring-0 resize-none py-4 px-6 text-slate-200 text-sm leading-relaxed placeholder:text-slate-500"
+                        onkeydown="handleKey(event)" style="outline:none; max-height: 200px;"></textarea>
+
+                    <div class="flex items-center gap-2 p-1">
+                        <button onclick="sendMessage()" id="send_btn"
+                            class="bg-indigo-600 hover:bg-indigo-500 text-white w-12 h-12 rounded-[1.25rem] flex items-center justify-center transition-all active:scale-95 shadow-lg shadow-indigo-600/20">
+                            <i class="mdi mdi-send text-xl"></i>
+                        </button>
+
+                        <button id="abort_btn" style="display: none;" onclick="stopGeneration()"
+                            class="h-12 px-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 rounded-[1.25rem] flex items-center gap-2 text-xs font-bold transition-all animate-pulse">
+                            <i class="mdi mdi-stop-circle text-xl"></i>
+                            <span class="hidden sm:inline">STOP</span>
+                        </button>
+                    </div>
+                </div>
+                <p class="text-center text-[10px] text-slate-500 mt-4 tracking-widest font-medium uppercase">
+                    Secured via High-Fidelity Local Processing Engine
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        let currentAbortController = null;
+
+        // --- 1. Enhanced Markdown Config ---
+        marked.setOptions({
+            gfm: true,
+            breaks: true,
+            highlight: function (code, lang) {
+                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                return hljs.highlight(code, { language }).value;
+            }
+        });
+
+        const renderer = new marked.Renderer();
+        renderer.code = function (token) {
+            const codeText = token.text || "";
+            const lang = token.lang || 'code';
+            const highlighted = hljs.highlightAuto(codeText).value;
+
+            // SVG Preview Logic
+            let previewHtml = "";
+            if (lang.toLowerCase() === 'svg') {
+                previewHtml = `
+        <div class="svg-preview-container border-b border-white/5">
+            <div class="absolute top-3 left-5 text-[10px] font-bold text-indigo-400/50 uppercase tracking-widest">NxtAi SVG Renderer</div>
+            ${codeText}
+        </div>`;
+            }
+
+            return `
+    <div class="my-6 rounded-xl overflow-hidden border border-white/10 bg-[#020617] group shadow-2xl">
+        ${previewHtml}
+        <div class="flex items-center justify-between px-5 py-2.5 bg-white/5 border-b border-white/5">
+            <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-tighter flex items-center gap-2">
+                <i class="mdi mdi-xml"></i> ${lang}
+            </span>
+            <button onclick="copyToClipboard(this)" class="text-[10px] font-bold text-slate-400 hover:text-white transition-all flex items-center gap-1.5">
+                <i class="mdi mdi-content-copy"></i> COPY
+            </button>
+        </div>
+        <pre class="p-5 overflow-x-auto"><code class="hljs language-${lang}">${highlighted}</code></pre>
+    </div>`;
+        };
+        marked.use({ renderer });
+
+        // --- 2. Advanced AI Text Processor ---
+        function processAiResponse(text) {
+            if (!text) return "";
+            // Handle LaTeX Blocks
+            let processed = text.replace(/\$\$([\s\S]+?)\$\$/g, (m, f) =>
+                `<div class="py-4 overflow-x-auto">${katex.renderToString(f, { displayMode: true, throwOnError: false })}</div>`
+            );
+            // Handle Inline LaTeX
+            processed = processed.replace(/\$([^\$\n]+?)\$/g, (m, f) =>
+                katex.renderToString(f, { displayMode: false, throwOnError: false })
+            );
+            // FIX: Add 'onclick' to the allowed attributes list
+            return DOMPurify.sanitize(marked.parse(processed), {
+                // ALLOW SVG TAGS AND ATTRIBUTES
+                ADD_TAGS: ['svg', 'use', 'symbol', 'path', 'defs', 'g', 'circle', 'rect', 'line', 'polyline', 'polygon'],
+                ADD_ATTR: ['viewBox', 'd', 'fill', 'stroke', 'stroke-width', 'id', 'points', 'cx', 'cy', 'r', 'x', 'y', 'width', 'height', 'target', 'onclick']
+            });
+        }
+
+        // --- 3. UI Utility Functions ---
+        function handleKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        const inputField = document.getElementById("user_input");
+        inputField.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        async function copyToClipboard(btn) {
+            // Navigate to the wrapper container and find the code tag
+            const container = btn.closest('.group');
+            const codeElement = container.querySelector('code');
+            const textToCopy = codeElement.innerText;
+
+            try {
+                await navigator.clipboard.writeText(textToCopy);
+
+                // Visual Feedback
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="mdi mdi-check text-green-400"></i> COPIED';
+                btn.classList.add('text-green-400');
+
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.classList.remove('text-green-400');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy!', err);
+            }
+        }
+        function stopGeneration() {
+            if (currentAbortController) {
+                currentAbortController.abort();
+                currentAbortController = null;
+                finalizeUI();
+            }
+        }
+
+        function finalizeUI() {
+            document.getElementById("user_input").disabled = false;
+            document.getElementById("send_btn").style.display = "flex";
+            document.getElementById("abort_btn").style.display = "none";
+            document.getElementById("user_input").focus();
+        }
+
+        function escapeHTML(str) {
+            return str
+                .toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        // --- 4. High-Fidelity Streaming Logic ---
+        async function sendMessage() {
+            const input = document.getElementById("user_input");
+            const chatbox = document.getElementById("chatbox");
+            const welcome = document.getElementById("welcome-screen");
+            let message = input.value.trim();
+
+            if (!message) return;
+            if (welcome) welcome.remove();
+
+            // limit input length to 2000 characters to 3500 token limit
+            if (message.length > 3500) {
+                alert("Input exceeds maximum length of 3500 characters.");
+                return;
+            }
+
+            message = escapeHTML(message);
+
+            // Clear Input and Update UI
+            input.value = "";
+            input.style.height = 'auto';
+            input.disabled = true;
+            document.getElementById("send_btn").style.display = "none";
+            document.getElementById("abort_btn").style.display = "flex";
+
+            // User Message Template
+            chatbox.insertAdjacentHTML('beforeend', `
+                <div class="flex justify-end mb-6">
+                    <div class="max-w-[80%] user-msg text-white px-7 py-4 rounded-[2rem] rounded-tr-none text-sm leading-relaxed">
+                        ${message}
+                    </div>
+                </div>`);
+
+            // AI Placeholder
+            const aiId = 'ai-' + Date.now();
+            chatbox.insertAdjacentHTML('beforeend', `
+    <div class="flex justify-start gap-4 mb-6 group">
+        <div class="w-12 h-12 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 self-start shadow-sm shadow-indigo-500/10">
+            <i class="mdi mdi-brain text-2xl"></i>
+        </div>
+
+        <div class="max-w-[85%] ai-msg px-8 py-6 rounded-[2.5rem] rounded-tl-none prose prose-invert text-sm" id="${aiId}">
+            <div class="flex items-center gap-3 py-1">
+                <div class="flex gap-1.5">
+                    <span class="analyze-dot animate-analyze" style="animation-delay: 0s"></span>
+                    <span class="analyze-dot animate-analyze" style="animation-delay: 0.2s"></span>
+                    <span class="analyze-dot animate-analyze" style="animation-delay: 0.4s"></span>
+                </div>
+                <span class="text-xs text-indigo-300/80 font-bold uppercase tracking-[0.2em] animate-shimmer">
+                    Analyzing Prompt...
+                </span>
+            </div>
+        </div>
+    </div>`);
+
+            chatbox.scrollTo({ top: chatbox.scrollHeight, behavior: 'smooth' });
+
+            const responseContainer = document.getElementById(aiId);
+            let accumulatedText = "";
+            currentAbortController = new AbortController();
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message }),
+                    signal: currentAbortController.signal
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let streamBuffer = "";
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+
+                    streamBuffer += decoder.decode(value, { stream: true });
+                    let parts = streamBuffer.split("\n\n");
+                    streamBuffer = parts.pop();
+
+                    for (let part of parts) {
+                        if (part.startsWith("data: ")) {
+                            try {
+                                const json = JSON.parse(part.substring(6));
+                                if (json.content) {
+                                    if (accumulatedText === "") responseContainer.innerHTML = "";
+                                    accumulatedText += json.content;
+                                    responseContainer.innerHTML = processAiResponse(accumulatedText);
+                                }
+                                if (json.done) break;
+                            } catch (e) {
+                                console.warn("Fragmented JSON", e);
+                            }
+                        }
+                    }
+                    chatbox.scrollTo({ top: chatbox.scrollHeight, behavior: 'auto' });
+                }
+
+            } catch (err) {
+                if (err.name === 'AbortError') {
+                    responseContainer.innerHTML `<div class="mt-4 text-[10px] font-bold text-amber-500/60 uppercase tracking-widest italic flex items-center gap-2">
+                        <i class="mdi mdi-alert-circle-outline"></i> Stream Terminated
+                    </div>`;
+                } else {
+                    responseContainer.innerHTML = `<span class="text-red-400 font-medium">Hardware Error: LLM process unreachable. Ensure Ollama is active.</span>`;
+                }
+            } finally {
+                finalizeUI();
+                currentAbortController = null;
+            }
+        }
+    </script>
+
+    <script>
+        function handleExampleClick(example) {
+            const input = document.getElementById("user_input");
+            input.value = example;
+            input.style.height = 'auto';
+            input.style.height = (input.scrollHeight) + 'px';
+            input.focus();
+        }
+    </script>
+</body>
+
+</html>
