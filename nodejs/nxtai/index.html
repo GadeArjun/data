@@ -566,7 +566,7 @@
 
             } catch (err) {
                 if (err.name === 'AbortError') {
-                    responseContainer.innerHTML `<div class="mt-4 text-[10px] font-bold text-amber-500/60 uppercase tracking-widest italic flex items-center gap-2">
+                    responseContainer.innerHTML = `<div class="mt-4 text-[10px] font-bold text-amber-500/60 uppercase tracking-widest italic flex items-center gap-2">
                         <i class="mdi mdi-alert-circle-outline"></i> Stream Terminated
                     </div>`;
                 } else {

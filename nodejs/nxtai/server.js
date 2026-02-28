@@ -2,6 +2,10 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const { default: PQueue } = require('p-queue');
+require('dotenv').config();
+
+const model_api = process.env.MODEL_API || "http://localhost:11434";
+console.log(`Using Model API Endpoint: ${model_api}`);
 
 
 /**
@@ -91,7 +95,7 @@ app.post('/chat', async (req, res) => {
     // await queue.add(async () => {
         try {
             logEvent("INFO", "QUEUE_TASK_START", { userId, queueSize: queue.size });
-            const response = await axios.post("http://localhost:11434/api/chat", {
+            const response = await axios.post(`${model_api}/api/chat`, {
                 model: MODEL,
                 messages: history,
                 stream: true,
